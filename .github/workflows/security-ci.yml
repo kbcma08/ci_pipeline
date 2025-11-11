@@ -1,9 +1,8 @@
-mkdir .github\workflows -Force
-
-@'
 name: CI with Security Checks
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
 
 jobs:
   test-and-scan:
@@ -22,18 +21,13 @@ jobs:
           pip install -r requirements.txt
           pip install safety bandit
 
-      - name: Run Tests
+      - name: Run tests
         run: pytest tests/ -q
 
-      - name: Security Check 1 - Dependency Scan
-        run: |
-          echo "🔍 Checking for vulnerable dependencies..."
-          safety check --full-report
+      - name: Dependency scan (safety)
+        run: safety check --full-report
         continue-on-error: true
 
-      - name: Security Check 2 - Code Security Scan
-        run: |
-          echo "🛡️ Scanning code for security issues..."
-          bandit -r src/ -ll
+      - name: Code scan (bandit)
+        run: bandit -r src/ -ll
         continue-on-error: true
-'@ | Out-File -FilePath .github\workflows\security-ci.yml -Encoding utf8 -NoNewline
