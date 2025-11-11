@@ -1,0 +1,39 @@
+mkdir .github\workflows -Force
+
+@'
+name: CI with Security Checks
+
+on: [push, pull_request]
+
+jobs:
+  test-and-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install safety bandit
+
+      - name: Run Tests
+        run: pytest tests/ -q
+
+      - name: Security Check 1 - Dependency Scan
+        run: |
+          echo "🔍 Checking for vulnerable dependencies..."
+          safety check --full-report
+        continue-on-error: true
+
+      - name: Security Check 2 - Code Security Scan
+        run: |
+          echo "🛡️ Scanning code for security issues..."
+          bandit -r src/ -ll
+        continue-on-error: true
+'@ | Out-File -FilePath .github\workflows\security-ci.yml -Encoding utf8 -NoNewline
