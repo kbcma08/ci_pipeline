@@ -3,6 +3,7 @@ name: CI with Security Checks
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 jobs:
   test-and-scan:
@@ -21,13 +22,15 @@ jobs:
           pip install -r requirements.txt
           pip install safety bandit
 
-      - name: Run tests
-        run: pytest tests/ -q
+      - name: Run tests (if any)
+        if: ${{ hashFiles('tests/**/*.py') != '' }}
+        run: pytest -q
 
       - name: Dependency scan (safety)
         run: safety check --full-report
         continue-on-error: true
 
-      - name: Code scan (bandit)
+      - name: Code scan (bandit) (if any)
+        if: ${{ hashFiles('src/**/*.py') != '' }}
         run: bandit -r src/ -ll
         continue-on-error: true
